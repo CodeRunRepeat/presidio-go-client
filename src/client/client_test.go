@@ -46,3 +46,17 @@ func TestAnalyzeWithDefaults(t *testing.T) {
 		t.Errorf("Analyze() returned unexpected response %q", result)
 	}
 }
+
+func TestAnalyzeWithPattern(t *testing.T) {
+	setupTest()
+
+	client := NewClient(baseUrl)
+
+	result, err := client.AnalyzeWithPattern("My phone is 123456", "en", "\\d+", 0.80, "SIMPLE_PHONE")
+
+	if err != nil {
+		t.Errorf("Analyze() failed with error %q", err)
+	} else if len(result.Matches) < 1 {
+		t.Errorf("Analyze() returned unexpected response %q", result)
+	}
+}
