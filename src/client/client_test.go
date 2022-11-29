@@ -43,7 +43,7 @@ func TestAnalyzeWithDefaults(t *testing.T) {
 	if err != nil {
 		t.Errorf("Analyze() failed with error %q", err)
 	} else if len(result.Matches) < 1 {
-		t.Errorf("Analyze() returned unexpected response %q", result)
+		t.Errorf("Analyze() returned unexpected response %v", result)
 	}
 }
 
@@ -57,6 +57,6 @@ func TestAnalyzeWithPattern(t *testing.T) {
 	if err != nil {
 		t.Errorf("Analyze() failed with error %q", err)
 	} else if len(result.Matches) < 1 {
-		t.Errorf("Analyze() returned unexpected response %q", result)
+		t.Errorf("Analyze() returned unexpected response %v", result)
 	}
 }
