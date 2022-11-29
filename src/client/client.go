@@ -1,3 +1,9 @@
+/*
+Client in Golang for the Presidio tool https://github.com/microsoft/presidio.
+Presidio is a context aware, pluggable and customizable PII anonymization service for text and images.
+
+This client is not an official part of Presidio.
+*/
 package client
 
 import (
@@ -6,21 +12,25 @@ import (
 	"presidio.org/generated"
 )
 
-type client struct {
+// A Client represents a Presidio client, used to call Presidio services that analyzes and anonymizes PII.
+type Client struct {
 	apiClient *generated.APIClient
 }
 
-func NewClient(baseUrl string) *client {
+// NewClient creates a new client to a service located at baseUrl
+func NewClient(baseUrl string) *Client {
 	conf := generated.NewConfiguration()
 	conf.BasePath = baseUrl
 	conf.AddDefaultHeader("Accept", "application/json")
 
-	c := new(client)
+	c := new(Client)
 	c.apiClient = generated.NewAPIClient(conf)
 	return c
 }
 
-func (c client) AnalyzeWithDefaults(text string, language string) (AnalyzerResult, error) {
+// AnalyzeWithDefaults analyzes text for PII in a specific language, using the default configuration,
+// and returns an AnalyzerResult containing the entities found.
+func (c *Client) AnalyzeWithDefaults(text string, language string) (AnalyzerResult, error) {
 	request := new(generated.AnalyzeRequest)
 	request.Text = text
 	request.Language = language
@@ -29,7 +39,10 @@ func (c client) AnalyzeWithDefaults(text string, language string) (AnalyzerResul
 	return transformResult(result), err
 }
 
-func (c client) AnalyzeWithPattern(text string, language string, pattern string, threshold float64, entityName string) (AnalyzerResult, error) {
+// AnalyzeWithPattern analyzes text for PII in a specific language, including a regex based custom entity called entityName,
+// with a specified score threshold,
+// and returns an AnalyzerResult containing the entities found.
+func (c *Client) AnalyzeWithPattern(text string, language string, pattern string, threshold float64, entityName string) (AnalyzerResult, error) {
 	request := new(generated.AnalyzeRequest)
 	request.Text = text
 	request.Language = language
@@ -54,7 +67,7 @@ func transformResult(result []generated.RecognizerResultWithAnaysisExplanation) 
 		analyzerResult.Matches[index] = m
 	}
 
-	return analyzerResult
+	return *analyzerResult
 }
 
 func createContext() context.Context {
