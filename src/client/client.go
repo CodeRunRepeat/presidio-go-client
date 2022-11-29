@@ -60,6 +60,21 @@ func (c *Client) AnalyzeWithPattern(text string, language string, pattern string
 	return transformResult(result), err
 }
 
+func (c *Client) AnalyzeWithOptions(text string, language string, options *AnalyzerOptions) (AnalyzerResult, error) {
+	if options == nil {
+		return c.AnalyzeWithDefaults(text, language)
+	}
+
+	request := new(generated.AnalyzeRequest)
+	*request = (options.request) // Shallow copy, intentional
+
+	request.Text = text
+	request.Language = language
+
+	result, _, err := c.apiClient.AnalyzerApi.AnalyzePost(createContext(), *request)
+	return transformResult(result), err
+}
+
 func transformResult(result []generated.RecognizerResultWithAnaysisExplanation) AnalyzerResult {
 	var analyzerResult = NewAnalyzerResult(len(result))
 	for index, r := range result {
