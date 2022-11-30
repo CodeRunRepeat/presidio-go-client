@@ -52,7 +52,7 @@ func TestAnalyzeWithPattern(t *testing.T) {
 
 	if err != nil {
 		t.Errorf("Analyze() failed with error %q", err)
-	} else if len(result.Matches) < 1 {
+	} else if len(result.Matches) != 2 {
 		t.Errorf("Analyze() returned unexpected response %v", result)
 	}
 }
