@@ -3,6 +3,8 @@ package client
 import (
 	"fmt"
 	"strings"
+
+	"presidio.org/generated"
 )
 
 // AnalyzerMatch represents a single PII entity identifed in text.
@@ -18,11 +20,14 @@ type AnalyzerMatch struct {
 
 	// EntityType is the name of the PII entity identified.
 	EntityType string
+
+	// RecognizerName is the name of the recognizer that identified this PII.
+	RecognizerName string
 }
 
 // String returns a string representation of an AnalyzerMatch.
 func (m *AnalyzerMatch) String() string {
-	return fmt.Sprintf("%v-%v (%v, %v)", m.Start, m.End, m.Score, m.EntityType)
+	return fmt.Sprintf("%v-%v (%v, %v, %v)", m.Start, m.End, m.Score, m.EntityType, m.RecognizerName)
 }
 
 // AnalyzerResult represents the overall outcome of PII analysis on a text.
@@ -48,6 +53,38 @@ func (r *AnalyzerResult) String() string {
 
 	var matches []string = make([]string, len(r.Matches))
 	for index, m := range r.Matches {
+		matches[index] = m.String()
+	}
+	return strings.Join(matches, "\n")
+}
+
+// AnalyzerMatchExplanation contains the explanation for a single PII match
+type AnalyzerMatchExplanation generated.AnalysisExplanation
+
+func (a *AnalyzerMatchExplanation) String() string {
+	return fmt.Sprintf("%+v", *a)
+}
+
+// AnalyzerResultExplanation contains the explanation for all PII entities identified in
+// the input text
+type AnalyzerResultExplanation []AnalyzerMatchExplanation
+
+// NewAnalyzerResultExplanation stands up an AnalyzerResultExplanation that can
+// initially accommodate numMatches matches' explanations.
+func NewAnalyzerResultExplanation(numMatches int) *AnalyzerResultExplanation {
+	newExplanation := make([]AnalyzerMatchExplanation, numMatches)
+	cast := AnalyzerResultExplanation(newExplanation)
+	return &cast
+}
+
+// String returns a string representation of an AnalyzerResultExplanation.
+func (r *AnalyzerResultExplanation) String() string {
+	if len(*r) == 0 {
+		return ""
+	}
+
+	var matches []string = make([]string, len(*r))
+	for index, m := range *r {
 		matches[index] = m.String()
 	}
 	return strings.Join(matches, "\n")

@@ -28,57 +28,30 @@ func NewClient(baseUrl string) *Client {
 	return c
 }
 
-// AnalyzeWithDefaults analyzes text for PII in a specific language, using the default configuration,
-// and returns an AnalyzerResult containing the entities found.
-func (c *Client) AnalyzeWithDefaults(text string, language string) (AnalyzerResult, error) {
-	request := new(generated.AnalyzeRequest)
-	request.Text = text
-	request.Language = language
-
-	result, _, err := c.apiClient.AnalyzerApi.AnalyzePost(createContext(), *request)
-	return transformResult(result), err
-}
-
-// AnalyzeWithPattern analyzes text for PII in a specific language, including a regex based custom entity called entityName,
-// with a specified score threshold,
-// and returns an AnalyzerResult containing the entities found.
-func (c *Client) AnalyzeWithPattern(text string, language string, pattern string, threshold float64, entityName string) (AnalyzerResult, error) {
-	var options AnalyzerOptions
-
-	options.AddPattern(
-		"CUSTOM_"+entityName+"_"+language,
-		entityName,
-		language,
-		[]string{pattern},
-		[]float64{threshold},
-		nil)
-
-	return c.AnalyzeWithOptions(text, language, &options)
-}
-
-func (c *Client) AnalyzeWithOptions(text string, language string, options *AnalyzerOptions) (AnalyzerResult, error) {
-	if options == nil {
-		return c.AnalyzeWithDefaults(text, language)
-	}
-
-	request := new(generated.AnalyzeRequest)
-	*request = (options.request) // Shallow copy, intentional
-
-	request.Text = text
-	request.Language = language
-
-	result, _, err := c.apiClient.AnalyzerApi.AnalyzePost(createContext(), *request)
-	return transformResult(result), err
-}
+/* -------------------- Private methods and functions -------------------- */
 
 func transformResult(result []generated.RecognizerResultWithAnaysisExplanation) AnalyzerResult {
 	var analyzerResult = NewAnalyzerResult(len(result))
 	for index, r := range result {
-		m := AnalyzerMatch{r.Start, r.End, r.Score, r.EntityType}
+		m := AnalyzerMatch{r.Start, r.End, r.Score, r.EntityType, "N/A"}
+		if r.RecognitionMetadata != nil {
+			m.RecognizerName = r.RecognitionMetadata.RecognizerName
+		}
 		analyzerResult.Matches[index] = m
 	}
 
 	return *analyzerResult
+}
+
+func transformExplanation(result []generated.RecognizerResultWithAnaysisExplanation) AnalyzerResultExplanation {
+	var explanation = NewAnalyzerResultExplanation(len(result))
+
+	for index, r := range result {
+		m := AnalyzerMatchExplanation(*r.AnalysisExplanation)
+		(*explanation)[index] = m
+	}
+
+	return *explanation
 }
 
 func createContext() context.Context {
