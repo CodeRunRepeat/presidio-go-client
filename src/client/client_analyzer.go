@@ -13,7 +13,7 @@ func (c *Client) AnalyzeWithDefaults(text string, language string) (AnalyzerResu
 	request.Text = text
 	request.Language = language
 
-	result, _, err := c.apiClient.AnalyzerApi.AnalyzePost(createContext(), *request)
+	result, _, err := c.apiClient.AnalyzerApi.AnalyzePost(c.createContext(), *request)
 	return transformResult(result), err
 }
 
@@ -47,7 +47,7 @@ func (c *Client) AnalyzeWithOptions(text string, language string, options *Analy
 	request.Text = text
 	request.Language = language
 
-	result, _, err := c.apiClient.AnalyzerApi.AnalyzePost(createContext(), *request)
+	result, _, err := c.apiClient.AnalyzerApi.AnalyzePost(c.createContext(), *request)
 	return transformResult(result), err
 }
 
@@ -64,13 +64,13 @@ func (c *Client) ExplainWithOptions(text string, language string, options *Analy
 	request.Language = language
 	request.ReturnDecisionProcess = true
 
-	result, _, err := c.apiClient.AnalyzerApi.AnalyzePost(createContext(), *request)
+	result, _, err := c.apiClient.AnalyzerApi.AnalyzePost(c.createContext(), *request)
 	return transformResult(result), transformExplanation(result), err
 }
 
 // Health checks the health status of the service and returns a value that indicates success.
 func (c *Client) Health() (string, error) {
-	result, _, err := c.apiClient.AnalyzerApi.HealthGet(createContext())
+	result, _, err := c.apiClient.AnalyzerApi.HealthGet(c.createContext())
 	return result, err
 }
 
@@ -85,7 +85,7 @@ func (c *Client) Recognizers(language string) ([]string, error) {
 		options.Language = optional.NewString(language)
 	}
 
-	result, _, err := c.apiClient.AnalyzerApi.RecognizersGet(createContext(), &options)
+	result, _, err := c.apiClient.AnalyzerApi.RecognizersGet(c.createContext(), &options)
 	return result, err
 }
 
@@ -100,6 +100,6 @@ func (c *Client) SupportedEntities(language string) ([]string, error) {
 		options.Language = optional.NewString(language)
 	}
 
-	result, _, err := c.apiClient.AnalyzerApi.SupportedentitiesGet(createContext(), &options)
+	result, _, err := c.apiClient.AnalyzerApi.SupportedentitiesGet(c.createContext(), &options)
 	return result, err
 }

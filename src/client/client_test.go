@@ -17,7 +17,7 @@ func setupTest() *Client {
 		baseUrl = DEFAULT_BASE_URL
 	}
 
-	return NewClient(baseUrl)
+	return NewClient(baseUrl, nil)
 }
 
 var baseUrl string = ""

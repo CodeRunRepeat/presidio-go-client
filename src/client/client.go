@@ -14,17 +14,20 @@ import (
 
 // A Client represents a Presidio client, used to call Presidio services that analyzes and anonymizes PII.
 type Client struct {
-	apiClient *generated.APIClient
+	apiClient            *generated.APIClient
+	authenticationMethod *AuthenticationMethod
+	context              context.Context
 }
 
 // NewClient creates a new client to a service located at baseUrl
-func NewClient(baseUrl string) *Client {
+func NewClient(baseUrl string, authenticationMethod *AuthenticationMethod) *Client {
 	conf := generated.NewConfiguration()
 	conf.BasePath = baseUrl
 	conf.AddDefaultHeader("Accept", "application/json")
 
 	c := new(Client)
 	c.apiClient = generated.NewAPIClient(conf)
+	c.authenticationMethod = authenticationMethod
 	return c
 }
 
@@ -54,6 +57,9 @@ func transformExplanation(result []generated.RecognizerResultWithAnaysisExplanat
 	return *explanation
 }
 
-func createContext() context.Context {
-	return context.TODO()
+func (client *Client) createContext() context.Context {
+	if client.context == nil {
+		client.context = context.TODO()
+	}
+	return client.context
 }
