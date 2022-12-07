@@ -1,4 +1,4 @@
-module presidio.org/generated
+module github.com/CodeRunRepeat/presidio-go-client
 
 go 1.19
 

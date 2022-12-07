@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"presidio.org/generated"
+	"github.com/CodeRunRepeat/presidio-go-client/generated"
 )
 
 // AnalyzerMatch represents a single PII entity identifed in text.

@@ -1,7 +1,7 @@
 package client
 
 import (
-	"presidio.org/generated"
+	"github.com/CodeRunRepeat/presidio-go-client/generated"
 
 	"github.com/antihax/optional"
 )
