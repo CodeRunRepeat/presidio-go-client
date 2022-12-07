@@ -9,7 +9,7 @@ package client
 import (
 	"context"
 
-	"presidio.org/generated"
+	"github.com/CodeRunRepeat/presidio-go-client/generated"
 )
 
 // A Client represents a Presidio client, used to call Presidio services that analyzes and anonymizes PII.

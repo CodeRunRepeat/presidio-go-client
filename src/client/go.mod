@@ -1,11 +1,11 @@
-module presidio.org/client
+module github.com/CodeRunRepeat/presidio-go-client
 
 go 1.19
 
 require (
+	github.com/CodeRunRepeat/presidio-go-client/generated v0.0.1
 	github.com/antihax/optional v1.0.0
 	github.com/google/uuid v1.3.0
-	presidio.org/generated v0.0.1
 )
 
 require (
@@ -16,4 +16,4 @@ require (
 	google.golang.org/protobuf v1.28.1 // indirect
 )
 
-replace presidio.org/generated => ../generated
+replace github.com/CodeRunRepeat/presidio-go-client/generated => ../generated
