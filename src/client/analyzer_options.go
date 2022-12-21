@@ -3,7 +3,7 @@ package client
 import (
 	"github.com/google/uuid"
 
-	"presidio.org/generated"
+	"github.com/CodeRunRepeat/presidio-go-client/generated"
 )
 
 // The AnalyzerOptions type describes all the optional settings we can use
