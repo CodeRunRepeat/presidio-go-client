@@ -1,8 +1,8 @@
 package client
 
 import (
+	"github.com/CodeRunRepeat/presidio-go-client/generated"
 	"golang.org/x/oauth2"
-	"presidio.org/generated"
 )
 
 type AuthenticationMethod interface {
@@ -11,16 +11,16 @@ type AuthenticationMethod interface {
 
 type BasicAuth generated.BasicAuth
 
-func (b *BasicAuth) getAuthenticationMethod() AuthenticationMethod { return b }
+func (b BasicAuth) getAuthenticationMethod() AuthenticationMethod { return b }
 
 type APIKey generated.APIKey
 
-func (a *APIKey) getAuthenticationMethod() AuthenticationMethod { return a }
+func (a APIKey) getAuthenticationMethod() AuthenticationMethod { return a }
 
-type OAuthToken string
+type AccessToken string
 
-func (o *OAuthToken) getAuthenticationMethod() AuthenticationMethod { return o }
+func (o AccessToken) getAuthenticationMethod() AuthenticationMethod { return o }
 
 type TokenSource struct{ TokenSource oauth2.TokenSource }
 
-func (t *TokenSource) getAuthenticationMethod() AuthenticationMethod { return t }
+func (t TokenSource) getAuthenticationMethod() AuthenticationMethod { return t }

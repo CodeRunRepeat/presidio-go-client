@@ -5,7 +5,7 @@ import (
 )
 
 func TestAnalyzeWithDefaults(t *testing.T) {
-	client := setupTest()
+	client := setupTest(nil)
 
 	result, err := client.AnalyzeWithDefaults("My name is John Smith", "en")
 
@@ -17,7 +17,7 @@ func TestAnalyzeWithDefaults(t *testing.T) {
 }
 
 func TestAnalyzeWithPattern(t *testing.T) {
-	client := setupTest()
+	client := setupTest(nil)
 
 	result, err := client.AnalyzeWithPattern("My phone is 123456", "en", "\\d+", 0.80, "SIMPLE_PHONE")
 
@@ -29,7 +29,7 @@ func TestAnalyzeWithPattern(t *testing.T) {
 }
 
 func TestAnalyzeWithOptions(t *testing.T) {
-	client := setupTest()
+	client := setupTest(nil)
 
 	options := new(AnalyzerOptions)
 	options.
@@ -46,7 +46,7 @@ func TestAnalyzeWithOptions(t *testing.T) {
 }
 
 func TestExplainWithOptions(t *testing.T) {
-	client := setupTest()
+	client := setupTest(nil)
 
 	options := new(AnalyzerOptions)
 	result, explanations, err := client.ExplainWithOptions("My phone is 123456", "en", options)
@@ -61,16 +61,51 @@ func TestExplainWithOptions(t *testing.T) {
 }
 
 func TestHealth(t *testing.T) {
-	client := setupTest()
+	client := setupTest(nil)
 
 	_, err := client.Health()
 	if err != nil {
 		t.Errorf("Health() failed with error %q", err)
 	}
 }
+func TestHealthWithBasicAuth(t *testing.T) {
+	client := setupTest(createBasicAuth())
+
+	_, err := client.Health()
+	if err != nil {
+		t.Errorf("Health() - BasicAuth failed with error %q", err)
+	}
+}
+
+func TestHealthWithAccessToken(t *testing.T) {
+	client := setupTest(createAccessToken())
+
+	_, err := client.Health()
+	if err != nil {
+		t.Errorf("Health() - AccessToken failed with error %q", err)
+	}
+}
+
+func TestHealthWithAPIKey(t *testing.T) {
+	client := setupTest(createAPIKey())
+
+	_, err := client.Health()
+	if err != nil {
+		t.Errorf("Health() - APIKey failed with error %q", err)
+	}
+}
+
+func TestHealthWithTokenSource(t *testing.T) {
+	client := setupTest(createTokenSource())
+
+	_, err := client.Health()
+	if err != nil {
+		t.Errorf("Health() - TokenSource failed with error %q", err)
+	}
+}
 
 func TestRecognizers(t *testing.T) {
-	client := setupTest()
+	client := setupTest(nil)
 
 	_, err := client.Recognizers("")
 	if err != nil {
@@ -84,7 +119,7 @@ func TestRecognizers(t *testing.T) {
 }
 
 func TestSupportedEntities(t *testing.T) {
-	client := setupTest()
+	client := setupTest(nil)
 
 	_, err := client.SupportedEntities("")
 	if err != nil {
