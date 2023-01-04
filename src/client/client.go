@@ -16,17 +16,20 @@ import (
 
 // A Client represents a Presidio client, used to call Presidio services that analyzes and anonymizes PII.
 type Client struct {
-	apiClient *generated.APIClient
+	apiClient            *generated.APIClient
+	authenticationMethod AuthenticationMethod
+	context              context.Context
 }
 
 // NewClient creates a new client to a service located at baseUrl
-func NewClient(baseUrl string) *Client {
+func NewClient(baseUrl string, authenticationMethod AuthenticationMethod) *Client {
 	conf := generated.NewConfiguration()
 	conf.BasePath = baseUrl
 	conf.AddDefaultHeader("Accept", "application/json")
 
 	c := new(Client)
 	c.apiClient = generated.NewAPIClient(conf)
+	c.authenticationMethod = authenticationMethod
 	return c
 }
 
@@ -37,7 +40,7 @@ func (c *Client) AnalyzeWithDefaults(text string, language string) (AnalyzerResu
 	request.Text = text
 	request.Language = language
 
-	result, _, err := c.apiClient.AnalyzerApi.AnalyzePost(createContext(), *request)
+	result, _, err := c.apiClient.AnalyzerApi.AnalyzePost(c.createContext(), *request)
 	return transformResult(result), err
 }
 
@@ -71,7 +74,7 @@ func (c *Client) AnalyzeWithOptions(text string, language string, options *Analy
 	request.Text = text
 	request.Language = language
 
-	result, _, err := c.apiClient.AnalyzerApi.AnalyzePost(createContext(), *request)
+	result, _, err := c.apiClient.AnalyzerApi.AnalyzePost(c.createContext(), *request)
 	return transformResult(result), err
 }
 
@@ -88,13 +91,13 @@ func (c *Client) ExplainWithOptions(text string, language string, options *Analy
 	request.Language = language
 	request.ReturnDecisionProcess = true
 
-	result, _, err := c.apiClient.AnalyzerApi.AnalyzePost(createContext(), *request)
+	result, _, err := c.apiClient.AnalyzerApi.AnalyzePost(c.createContext(), *request)
 	return transformResult(result), transformExplanation(result), err
 }
 
 // Health checks the health status of the service and returns a value that indicates success.
 func (c *Client) Health() (string, error) {
-	result, _, err := c.apiClient.AnalyzerApi.HealthGet(createContext())
+	result, _, err := c.apiClient.AnalyzerApi.HealthGet(c.createContext())
 	return result, err
 }
 
@@ -109,7 +112,7 @@ func (c *Client) Recognizers(language string) ([]string, error) {
 		options.Language = optional.NewString(language)
 	}
 
-	result, _, err := c.apiClient.AnalyzerApi.RecognizersGet(createContext(), &options)
+	result, _, err := c.apiClient.AnalyzerApi.RecognizersGet(c.createContext(), &options)
 	return result, err
 }
 
@@ -124,7 +127,7 @@ func (c *Client) SupportedEntities(language string) ([]string, error) {
 		options.Language = optional.NewString(language)
 	}
 
-	result, _, err := c.apiClient.AnalyzerApi.SupportedentitiesGet(createContext(), &options)
+	result, _, err := c.apiClient.AnalyzerApi.SupportedentitiesGet(c.createContext(), &options)
 	return result, err
 }
 
@@ -154,6 +157,36 @@ func transformExplanation(result []generated.RecognizerResultWithAnaysisExplanat
 	return *explanation
 }
 
-func createContext() context.Context {
-	return context.TODO()
+func (client *Client) createContext() context.Context {
+	if client.context == nil {
+		client.context = context.TODO()
+
+		switch client.authenticationMethod.(type) {
+		case AccessToken:
+			{
+				auth := client.authenticationMethod.(AccessToken)
+				token := string(auth)
+				client.context = context.WithValue(client.context, generated.ContextAccessToken, token)
+			}
+		case BasicAuth:
+			{
+				auth := client.authenticationMethod.(BasicAuth)
+				basic := generated.BasicAuth{UserName: auth.UserName, Password: auth.Password}
+				client.context = context.WithValue(client.context, generated.ContextBasicAuth, basic)
+			}
+		case APIKey:
+			{
+				auth := client.authenticationMethod.(APIKey)
+				key := generated.APIKey{Key: auth.Key, Prefix: auth.Prefix}
+				client.context = context.WithValue(client.context, generated.ContextAPIKey, key)
+			}
+		case TokenSource:
+			{
+				auth := client.authenticationMethod.(TokenSource)
+				source := auth.TokenSource
+				client.context = context.WithValue(client.context, generated.ContextOAuth2, source)
+			}
+		}
+	}
+	return client.context
 }
