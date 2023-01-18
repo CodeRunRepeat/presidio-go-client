@@ -21,7 +21,9 @@ type Client struct {
 	context              context.Context
 }
 
-// NewClient creates a new client to a service located at baseUrl
+/* -------------------- Creation -------------------- */
+
+// NewClient creates a new client to a service located at baseUrl using an optional authenticationMethod
 func NewClient(baseUrl string, authenticationMethod AuthenticationMethod) *Client {
 	conf := generated.NewConfiguration()
 	conf.BasePath = baseUrl
@@ -33,6 +35,8 @@ func NewClient(baseUrl string, authenticationMethod AuthenticationMethod) *Clien
 	return c
 }
 
+/* -------------------- Analyzer functions -------------------- */
+
 // AnalyzeWithDefaults analyzes text for PII in a specific language, using the default configuration,
 // and returns an AnalyzerResult containing the entities found.
 func (c *Client) AnalyzeWithDefaults(text string, language string) (AnalyzerResult, error) {
@@ -41,7 +45,7 @@ func (c *Client) AnalyzeWithDefaults(text string, language string) (AnalyzerResu
 	request.Language = language
 
 	result, _, err := c.apiClient.AnalyzerApi.AnalyzePost(c.createContext(), *request)
-	return transformResult(result), err
+	return transformAnalyzerResult(result), err
 }
 
 // AnalyzeWithPattern analyzes text for PII in a specific language, including a regex based custom entity called entityName,
@@ -75,7 +79,7 @@ func (c *Client) AnalyzeWithOptions(text string, language string, options *Analy
 	request.Language = language
 
 	result, _, err := c.apiClient.AnalyzerApi.AnalyzePost(c.createContext(), *request)
-	return transformResult(result), err
+	return transformAnalyzerResult(result), err
 }
 
 func (c *Client) ExplainWithOptions(text string, language string, options *AnalyzerOptions) (AnalyzerResult, AnalyzerResultExplanation, error) {
@@ -92,11 +96,11 @@ func (c *Client) ExplainWithOptions(text string, language string, options *Analy
 	request.ReturnDecisionProcess = true
 
 	result, _, err := c.apiClient.AnalyzerApi.AnalyzePost(c.createContext(), *request)
-	return transformResult(result), transformExplanation(result), err
+	return transformAnalyzerResult(result), transformExplanation(result), err
 }
 
-// Health checks the health status of the service and returns a value that indicates success.
-func (c *Client) Health() (string, error) {
+// AnalyzerHealth checks the health status of the analyzer service and returns a value that indicates success.
+func (c *Client) AnalyzerHealth() (string, error) {
 	result, _, err := c.apiClient.AnalyzerApi.HealthGet(c.createContext())
 	return result, err
 }
@@ -131,9 +135,31 @@ func (c *Client) SupportedEntities(language string) ([]string, error) {
 	return result, err
 }
 
-/* -------------------- Private methods and functions -------------------- */
+/* -------------------- Anonymizer functions -------------------- */
 
-func transformResult(result []generated.RecognizerResultWithAnaysisExplanation) AnalyzerResult {
+// Anonymizer checks the health status of the anonymizer service and returns a value that indicates success.
+func (c *Client) AnonymizerHealth() (string, error) {
+	result, _, err := c.apiClient.AnonymizerApi.HealthGet(c.createContext())
+	return result, err
+}
+
+func (c *Client) Anonymize(text string, anonymizers *AnonymizerSet, analyzerResult *AnalyzerResult) (string, error) {
+	var request generated.AnonymizeRequest
+	request.Text = text
+	request.Anonymizers = anonymizers.prepareAnonymizerSetForRequest()
+	request.AnalyzerResults = prepareAnalyzerResult(analyzerResult)
+	response, _, err := c.apiClient.AnonymizerApi.AnonymizePost(c.createContext(), request)
+
+	return response.Text, err
+}
+
+/* -------------------- Private functions -------------------- */
+
+func prepareAnalyzerResult(analyzerResult *AnalyzerResult) []generated.RecognizerResult {
+	return nil
+}
+
+func transformAnalyzerResult(result []generated.RecognizerResultWithAnaysisExplanation) AnalyzerResult {
 	var analyzerResult = NewAnalyzerResult(len(result))
 	for index, r := range result {
 		m := AnalyzerMatch{r.Start, r.End, r.Score, r.EntityType, "N/A"}
