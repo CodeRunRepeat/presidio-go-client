@@ -8,6 +8,7 @@ package client
 
 import (
 	"context"
+	"errors"
 
 	"github.com/CodeRunRepeat/presidio-go-client/generated"
 
@@ -45,7 +46,7 @@ func (c *Client) AnalyzeWithDefaults(text string, language string) (AnalyzerResu
 	request.Language = language
 
 	result, _, err := c.apiClient.AnalyzerApi.AnalyzePost(c.createContext(), *request)
-	return transformAnalyzerResult(result), err
+	return transformToAnalyzerResult(result), err
 }
 
 // AnalyzeWithPattern analyzes text for PII in a specific language, including a regex based custom entity called entityName,
@@ -79,7 +80,7 @@ func (c *Client) AnalyzeWithOptions(text string, language string, options *Analy
 	request.Language = language
 
 	result, _, err := c.apiClient.AnalyzerApi.AnalyzePost(c.createContext(), *request)
-	return transformAnalyzerResult(result), err
+	return transformToAnalyzerResult(result), err
 }
 
 func (c *Client) ExplainWithOptions(text string, language string, options *AnalyzerOptions) (AnalyzerResult, AnalyzerResultExplanation, error) {
@@ -96,7 +97,7 @@ func (c *Client) ExplainWithOptions(text string, language string, options *Analy
 	request.ReturnDecisionProcess = true
 
 	result, _, err := c.apiClient.AnalyzerApi.AnalyzePost(c.createContext(), *request)
-	return transformAnalyzerResult(result), transformExplanation(result), err
+	return transformToAnalyzerResult(result), transformExplanation(result), err
 }
 
 // AnalyzerHealth checks the health status of the analyzer service and returns a value that indicates success.
@@ -143,45 +144,46 @@ func (c *Client) AnonymizerHealth() (string, error) {
 	return result, err
 }
 
-func (c *Client) Anonymize(text string, anonymizers *AnonymizerSet, analyzerResult *AnalyzerResult) (string, error) {
+// Anonymize removes PII from text using the provided anonymizers. It can reuse an existing analyzerResult.
+func (c *Client) Anonymize(text string, anonymizers *AnonymizerSet, analyzerResult *AnalyzerResult) (string, AnonymizerResult, error) {
+	return "", AnonymizerResult{}, errors.New("Anonymize currently not working properly due to generated client issue")
 	var request generated.AnonymizeRequest
 	request.Text = text
 	request.Anonymizers = anonymizers.prepareAnonymizerSetForRequest()
-	request.AnalyzerResults = prepareAnalyzerResult(analyzerResult)
+	request.AnalyzerResults = transformFromAnalyzerResult(analyzerResult)
 	response, _, err := c.apiClient.AnonymizerApi.AnonymizePost(c.createContext(), request)
 
-	return response.Text, err
+	return response.Text, transformToAnonymizerResult(response.Items), err
+}
+
+// Deanonymize reverses anonymization in the supplied text, using the provided anonymizers which should be reversible.
+// It can reuse an existing anonymizer result.
+func (c *Client) Deanonymize(text string, anonymizers *AnonymizerSet, results *AnonymizerResult) (string, AnonymizerResult, error) {
+	return "", AnonymizerResult{}, errors.New("Deanonymize currently not working properly due to generated client issue")
+	var request generated.DeanonymizeRequest
+	request.Text = text
+	request.Deanonymizers = anonymizers.prepareAnonymizerSetForReverseRequest()
+	if results != nil {
+		request.AnonymizerResults = transformFromAnonymizerResult(*results)
+	}
+	response, _, err := c.apiClient.AnonymizerApi.DeanonymizePost(c.createContext(), request)
+
+	return response.Text, transformToAnonymizerResult(response.Items), err
+}
+
+// GetAnonymizers retrieves the list of available anonymizers.
+func (c *Client) GetAnonymizers() ([]string, error) {
+	anonymizers, _, err := c.apiClient.AnonymizerApi.AnonymizersGet(c.createContext())
+	return anonymizers, err
+}
+
+// GetDeanonymizers retrieves the list of available deanonymizers.
+func (c *Client) GetDeanonymizers() ([]string, error) {
+	deanonymizers, _, err := c.apiClient.AnonymizerApi.DeanonymizersGet(c.createContext())
+	return deanonymizers, err
 }
 
 /* -------------------- Private functions -------------------- */
-
-func prepareAnalyzerResult(analyzerResult *AnalyzerResult) []generated.RecognizerResult {
-	return nil
-}
-
-func transformAnalyzerResult(result []generated.RecognizerResultWithAnaysisExplanation) AnalyzerResult {
-	var analyzerResult = NewAnalyzerResult(len(result))
-	for index, r := range result {
-		m := AnalyzerMatch{r.Start, r.End, r.Score, r.EntityType, "N/A"}
-		if r.RecognitionMetadata != nil {
-			m.RecognizerName = r.RecognitionMetadata.RecognizerName
-		}
-		analyzerResult.Matches[index] = m
-	}
-
-	return *analyzerResult
-}
-
-func transformExplanation(result []generated.RecognizerResultWithAnaysisExplanation) AnalyzerResultExplanation {
-	var explanation = NewAnalyzerResultExplanation(len(result))
-
-	for index, r := range result {
-		m := AnalyzerMatchExplanation(*r.AnalysisExplanation)
-		(*explanation)[index] = m
-	}
-
-	return *explanation
-}
 
 func (client *Client) createContext() context.Context {
 	if client.context == nil {

@@ -7,6 +7,7 @@ import (
 	"github.com/CodeRunRepeat/presidio-go-client/generated"
 )
 
+/*-------------------------------- AnalyzerMatch --------------------------------*/
 // AnalyzerMatch represents a single PII entity identifed in text.
 type AnalyzerMatch struct {
 	// Start is the index of the match's first character in the text.
@@ -30,6 +31,7 @@ func (m *AnalyzerMatch) String() string {
 	return fmt.Sprintf("%v-%v (%v, %v, %v)", m.Start, m.End, m.Score, m.EntityType, m.RecognizerName)
 }
 
+/*-------------------------------- AnalyzerResult --------------------------------*/
 // AnalyzerResult represents the overall outcome of PII analysis on a text.
 type AnalyzerResult struct {
 	// Matches contains all the possible PII matches found in the text,
@@ -58,6 +60,32 @@ func (r *AnalyzerResult) String() string {
 	return strings.Join(matches, "\n")
 }
 
+func transformToAnalyzerResult(result []generated.RecognizerResultWithAnaysisExplanation) AnalyzerResult {
+	var analyzerResult = NewAnalyzerResult(len(result))
+	for index, r := range result {
+		analyzerResult.Matches[index] = AnalyzerMatch{r.Start, r.End, r.Score, r.EntityType, "N/A"}
+		if r.RecognitionMetadata != nil {
+			analyzerResult.Matches[index].RecognizerName = r.RecognitionMetadata.RecognizerName
+		}
+	}
+
+	return *analyzerResult
+}
+
+//lint:ignore U1000 Will be fixed when we resolve the anonymizer serialization issue with the Presidio team
+func transformFromAnalyzerResult(analyzerResult *AnalyzerResult) []generated.RecognizerResult {
+	result := make([]generated.RecognizerResult, len(analyzerResult.Matches))
+	for index, m := range analyzerResult.Matches {
+		result[index] = generated.RecognizerResult{Start: m.Start, End: m.End, Score: m.Score, EntityType: m.EntityType}
+		if m.RecognizerName != "" {
+			result[index].RecognitionMetadata = &generated.RecognizedMetadata{RecognizerName: m.RecognizerName}
+		}
+	}
+
+	return result
+}
+
+/*-------------------------------- AnalyzerMatchExplanation --------------------------------*/
 // AnalyzerMatchExplanation contains the explanation for a single PII match
 type AnalyzerMatchExplanation generated.AnalysisExplanation
 
@@ -65,6 +93,7 @@ func (a *AnalyzerMatchExplanation) String() string {
 	return fmt.Sprintf("%+v", *a)
 }
 
+/*-------------------------------- AnalyzerResultExplanation --------------------------------*/
 // AnalyzerResultExplanation contains the explanation for all PII entities identified in
 // the input text
 type AnalyzerResultExplanation []AnalyzerMatchExplanation
@@ -88,4 +117,15 @@ func (r *AnalyzerResultExplanation) String() string {
 		matches[index] = m.String()
 	}
 	return strings.Join(matches, "\n")
+}
+
+func transformExplanation(result []generated.RecognizerResultWithAnaysisExplanation) AnalyzerResultExplanation {
+	var explanation = NewAnalyzerResultExplanation(len(result))
+
+	for index, r := range result {
+		m := AnalyzerMatchExplanation(*r.AnalysisExplanation)
+		(*explanation)[index] = m
+	}
+
+	return *explanation
 }

@@ -12,6 +12,7 @@ type Anonymizer interface {
 	getTypeName() string
 	generateRequest() any
 	compareWithRequest(request any) (bool, error)
+	generateReverseRequest() any
 }
 
 // An AnonymizerSet holds configuration on how to anonymize different entities.
@@ -58,15 +59,20 @@ func (as *AnonymizerSet) RemoveAnonymizer(entityName string) *AnonymizerSet {
 	return as
 }
 
-func (as *AnonymizerSet) prepareAnonymizerSetForRequest() *generated.AnyOfAnonymizeRequestAnonymizers {
-	output := new(generated.AnyOfAnonymizeRequestAnonymizers)
-
+func getFirstAnonymizer(as *AnonymizerSet) Anonymizer {
 	// Storing just one value from the AnonymizerSet since the auto-generated type for this field
 	// cannot accommodate multiple values.
 	firstAnonymizer := as.Get(DEFAULT)
 	if firstAnonymizer == nil {
 		firstAnonymizer = as.First()
 	}
+	return firstAnonymizer
+}
+
+func (as *AnonymizerSet) prepareAnonymizerSetForRequest() *generated.AnyOfAnonymizeRequestAnonymizers {
+	output := new(generated.AnyOfAnonymizeRequestAnonymizers)
+
+	firstAnonymizer := getFirstAnonymizer(as)
 	if firstAnonymizer == nil {
 		return nil
 	}
@@ -86,12 +92,32 @@ func (as *AnonymizerSet) prepareAnonymizerSetForRequest() *generated.AnyOfAnonym
 	return output
 }
 
+//lint:ignore U1000 Will be fixed when we resolve the anonymizer serialization issue with the Presidio team
+func (as *AnonymizerSet) prepareAnonymizerSetForReverseRequest() *generated.AnyOfDeanonymizeRequestDeanonymizers {
+	output := new(generated.AnyOfDeanonymizeRequestDeanonymizers)
+
+	firstAnonymizer := getFirstAnonymizer(as)
+	if firstAnonymizer == nil {
+		return nil
+	}
+
+	reverse := firstAnonymizer.generateReverseRequest()
+	if reverse == nil {
+		return nil
+	}
+	output.Decrypt = reverse.(generated.Decrypt) // The only reversible anonymization method available is encryption
+	return output
+}
+
 /*------------------------------ Anonymizer types ------------------------------*/
-const REDACT string = "redact"
-const REPLACE string = "replace"
-const MASK string = "mask"
-const HASH string = "hash"
-const ENCRYPT string = "encrypt"
+const (
+	REDACT  string = "redact"
+	REPLACE string = "replace"
+	MASK    string = "mask"
+	HASH    string = "hash"
+	ENCRYPT string = "encrypt"
+	DECRYPT string = "decrypt"
+)
 
 type anonymizerRequestType interface {
 	generated.Replace | generated.Redact | generated.Mask | generated.Hash | generated.Encrypt
@@ -119,6 +145,7 @@ func (ra RedactAnonymizer) compareWithRequest(request any) (bool, error) {
 	res, _, err := checkForType[generated.Redact](request)
 	return res, err
 }
+func (ra RedactAnonymizer) generateReverseRequest() any { return nil }
 
 type ReplaceAnonymizer struct {
 	NewValue string
@@ -135,6 +162,7 @@ func (ra ReplaceAnonymizer) compareWithRequest(request any) (bool, error) {
 	}
 	return res, err
 }
+func (ra ReplaceAnonymizer) generateReverseRequest() any { return nil }
 
 type MaskAnonymizer struct {
 	MaskingChar string
@@ -158,6 +186,7 @@ func (ma MaskAnonymizer) compareWithRequest(request any) (bool, error) {
 	}
 	return res, err
 }
+func (ma MaskAnonymizer) generateReverseRequest() any { return nil }
 
 type HashAnonymizer struct {
 	HashType string
@@ -174,6 +203,7 @@ func (ha HashAnonymizer) compareWithRequest(request any) (bool, error) {
 	}
 	return res, err
 }
+func (ha HashAnonymizer) generateReverseRequest() any { return nil }
 
 type EncryptAnonymizer struct {
 	Key string
@@ -189,4 +219,7 @@ func (ea EncryptAnonymizer) compareWithRequest(request any) (bool, error) {
 		return (value.Key == ea.Key), nil
 	}
 	return res, err
+}
+func (ea EncryptAnonymizer) generateReverseRequest() any {
+	return generated.Decrypt{Type_: DECRYPT, Key: ea.Key}
 }
