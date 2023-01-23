@@ -146,11 +146,12 @@ func (c *Client) AnonymizerHealth() (string, error) {
 
 // Anonymize removes PII from text using the provided anonymizers. It can reuse an existing analyzerResult.
 func (c *Client) Anonymize(text string, anonymizers *AnonymizerSet, analyzerResult *AnalyzerResult) (string, AnonymizerResult, error) {
-	return "", AnonymizerResult{}, errors.New("Anonymize currently not working properly due to generated client issue")
 	var request generated.AnonymizeRequest
 	request.Text = text
 	request.Anonymizers = *anonymizers.prepareAnonymizerSetForRequest()
-	request.AnalyzerResults = transformFromAnalyzerResult(analyzerResult)
+	if analyzerResult != nil {
+		request.AnalyzerResults = transformFromAnalyzerResult(analyzerResult)
+	}
 	response, _, err := c.apiClient.AnonymizerApi.AnonymizePost(c.createContext(), request)
 
 	return response.Text, transformToAnonymizerResult(response.Items), err

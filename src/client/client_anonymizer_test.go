@@ -12,13 +12,16 @@ func TestAnonymizerHealth(t *testing.T) {
 }
 
 func TestAnonymize(t *testing.T) {
-	t.Skip("Anonymize calls currently fail due to generated client issue.")
 	client := setupTest(nil, ANONYMIZER_CLIENT)
 
 	var anonymizers = CreateAnonymizerSet()
 	anonymizers.AddDefaultAnonymizer(ReplaceAnonymizer{NewValue: "****"})
 
-	_, _, err := client.Anonymize("My name is Joe", anonymizers, nil)
+	var anResult AnalyzerResult
+	anResult.Matches = make([]AnalyzerMatch, 1)
+	anResult.Matches[0] = AnalyzerMatch{Start: 11, End: 21, Score: 0.85, EntityType: "PERSON"}
+
+	_, _, err := client.Anonymize("My name is John Smith", anonymizers, &anResult)
 	if err != nil {
 		t.Errorf("Anonymize() failed with error %q", err)
 	}
