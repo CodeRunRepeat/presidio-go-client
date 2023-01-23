@@ -13,7 +13,7 @@ type DeanonymizeRequest struct {
 	// The anonymized text
 	Text string `json:"text"`
 	// Object where the key is DEFAULT or the ENTITY_TYPE and the value is decrypt since it is the only one supported
-	Deanonymizers *AnyOfDeanonymizeRequestDeanonymizers `json:"deanonymizers"`
+	Deanonymizers AnonymizerMap `json:"deanonymizers"`
 	// Array of anonymized PIIs
 	AnonymizerResults []OperatorResult `json:"anonymizer_results"`
 }

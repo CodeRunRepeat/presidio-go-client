@@ -10,36 +10,60 @@ import (
 	"golang.org/x/oauth2"
 )
 
-func setupTest(auth AuthenticationMethod) *Client {
-	if baseUrl == "" {
-		url, found := os.LookupEnv(ENVIROMENT_BASE_URL)
-		if found {
-			baseUrl = url
-		}
-	}
+func setupTest(auth AuthenticationMethod, clientType int) *Client {
+	analyzerBaseUrl = getBaseUrl(analyzerBaseUrl, ENVIROMENT_ANALYZER_URL, DEFAULT_ANALYZER_URL)
+	anonymizerBaseUrl = getBaseUrl(anonymizerBaseUrl, ENVIROMENT_ANONYMIZER_URL, DEFAULT_ANONYMIZER_URL)
 
-	if baseUrl == "" {
-		baseUrl = DEFAULT_BASE_URL
+	if clientType == ANONYMIZER_CLIENT {
+		return NewClient(anonymizerBaseUrl, auth)
 	}
-
-	return NewClient(baseUrl, auth)
+	return NewClient(analyzerBaseUrl, auth)
 }
 
-var baseUrl string = ""
+func getBaseUrl(currentValue string, envName string, defaultValue string) string {
+	if currentValue != "" {
+		return currentValue
+	}
 
-const DEFAULT_BASE_URL = "https://presidio-analyzer-prod.azurewebsites.net"
-const ENVIROMENT_BASE_URL = "PRESIDIO_CLIENT_BASE_URL"
+	url, found := os.LookupEnv(envName)
+	if found {
+		return url
+	}
 
-func TestNewClient(t *testing.T) {
-	client := setupTest(nil)
+	return defaultValue
+}
+
+var analyzerBaseUrl string = ""
+var anonymizerBaseUrl string = ""
+
+const (
+	ANALYZER_CLIENT = iota + 1
+	ANONYMIZER_CLIENT
+)
+
+const DEFAULT_ANALYZER_URL = "https://presidio-analyzer-prod.azurewebsites.net"
+const ENVIROMENT_ANALYZER_URL = "PRESIDIO_CLIENT_ANALYZER_URL"
+const DEFAULT_ANONYMIZER_URL = "https://presidio-anonymizer-prod.azurewebsites.net"
+const ENVIROMENT_ANONYMIZER_URL = "PRESIDIO_CLIENT_ANONYMIZER_URL"
+
+func TestNewAnalyzerClient(t *testing.T) {
+	client := setupTest(nil, ANALYZER_CLIENT)
 
 	if client == nil {
-		t.Error("NewClient() must return non-nil")
+		t.Error("TestNewAnalyzerClient() must return non-nil")
+	}
+}
+
+func TestNewAnonymizerClient(t *testing.T) {
+	client := setupTest(nil, ANALYZER_CLIENT)
+
+	if client == nil {
+		t.Error("TestNewAnonymizerClient() must return non-nil")
 	}
 }
 
 func TestNewClientBasicAuth(t *testing.T) {
-	client := setupTest(createBasicAuth())
+	client := setupTest(createBasicAuth(), ANALYZER_CLIENT)
 	if client == nil {
 		t.Error("NewClient() must return non-nil")
 	}
@@ -58,7 +82,7 @@ func TestNewClientBasicAuth(t *testing.T) {
 }
 
 func TestNewClientAccessToken(t *testing.T) {
-	client := setupTest(createAccessToken())
+	client := setupTest(createAccessToken(), ANALYZER_CLIENT)
 	if client == nil {
 		t.Error("NewClient() must return non-nil")
 	}
@@ -77,7 +101,7 @@ func TestNewClientAccessToken(t *testing.T) {
 }
 
 func TestNewClientAPIKey(t *testing.T) {
-	client := setupTest(createAPIKey())
+	client := setupTest(createAPIKey(), ANALYZER_CLIENT)
 	if client == nil {
 		t.Error("NewClient() must return non-nil")
 	}
@@ -96,7 +120,7 @@ func TestNewClientAPIKey(t *testing.T) {
 }
 
 func TestNewClientTokenSource(t *testing.T) {
-	client := setupTest(createTokenSource())
+	client := setupTest(createTokenSource(), ANALYZER_CLIENT)
 	if client == nil {
 		t.Error("NewClient() must return non-nil")
 	}
