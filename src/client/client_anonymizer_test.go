@@ -28,19 +28,20 @@ func TestAnonymize(t *testing.T) {
 }
 
 func TestDeanonymize(t *testing.T) {
-	t.Skip("Deanonymize calls currently fail due to generated client issue.")
 	client := setupTest(nil, ANONYMIZER_CLIENT)
 
 	var anonymizers = CreateAnonymizerSet()
 	anonymizers.AddDefaultAnonymizer(EncryptAnonymizer{Key: "AAECAwQFBgcICQoLDA0ODw=="})
 
-	originalText := "My name is Joe"
-	text := "My name is RwubUhLxYvYHFBej1T1j+zmq+e6CYW2j5+Tyq+m/2b4="
-	newText, _, err := client.Deanonymize(text, anonymizers, nil)
+	var anResult AnonymizerResult
+	anResult.Matches = make([]AnonymizerMatch, 1)
+	anResult.Matches[0] = AnonymizerMatch{Start: 11, End: 55, EntityType: "PERSON", AnonymizerAction: "encrypt", Text: "t99qIN/lfJICokb9voMr4TnxhqLGMR5ubpZrl6oqqJc="}
+	newText, _, err := client.Deanonymize("My name is t99qIN/lfJICokb9voMr4TnxhqLGMR5ubpZrl6oqqJc=", anonymizers, &anResult)
 	if err != nil {
 		t.Errorf("Deanonymize() failed with error %q", err)
 	}
 
+	originalText := "My name is John Smith"
 	if newText != originalText {
 		t.Errorf("Deanonymize() failed: expected '%v', got '%v'", originalText, newText)
 	}

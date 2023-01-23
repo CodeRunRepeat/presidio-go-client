@@ -10,7 +10,7 @@ type Anonymizer interface {
 	getTypeName() string
 	generateRequest() generated.AnonymizerMashup
 	compareWithRequest(request generated.AnonymizerMashup) bool
-	generateReverseRequest() any
+	generateReverseRequest() generated.AnonymizerMashup
 }
 
 // An AnonymizerSet holds configuration on how to anonymize different entities.
@@ -79,20 +79,15 @@ func (as *AnonymizerSet) prepareAnonymizerSetForRequest() *generated.AnonymizerM
 }
 
 //lint:ignore U1000 Will be fixed when we resolve the anonymizer serialization issue with the Presidio team
-func (as *AnonymizerSet) prepareAnonymizerSetForReverseRequest() *generated.AnyOfDeanonymizeRequestDeanonymizers {
-	output := new(generated.AnyOfDeanonymizeRequestDeanonymizers)
+func (as *AnonymizerSet) prepareAnonymizerSetForReverseRequest() *generated.AnonymizerMap {
+	output := make(generated.AnonymizerMap, as.Count())
 
-	firstAnonymizer := getFirstAnonymizer(as)
-	if firstAnonymizer == nil {
-		return nil
+	for entityType, an := range *as {
+		var mashup = an.generateReverseRequest()
+		output[entityType] = mashup
 	}
 
-	reverse := firstAnonymizer.generateReverseRequest()
-	if reverse == nil {
-		return nil
-	}
-	output.Decrypt = reverse.(generated.Decrypt) // The only reversible anonymization method available is encryption
-	return output
+	return &output
 }
 
 /*------------------------------ Anonymizer types ------------------------------*/
@@ -103,6 +98,7 @@ const (
 	HASH    string = "hash"
 	ENCRYPT string = "encrypt"
 	DECRYPT string = "decrypt"
+	NIL     string = ""
 )
 
 func checkForType(request generated.AnonymizerMashup, typeName string) bool {
@@ -119,7 +115,9 @@ func (ra RedactAnonymizer) generateRequest() generated.AnonymizerMashup {
 func (ra RedactAnonymizer) compareWithRequest(request generated.AnonymizerMashup) bool {
 	return checkForType(request, ra.getTypeName())
 }
-func (ra RedactAnonymizer) generateReverseRequest() any { return nil }
+func (ra RedactAnonymizer) generateReverseRequest() generated.AnonymizerMashup {
+	return generated.AnonymizerMashup{Type_: NIL}
+}
 
 type ReplaceAnonymizer struct {
 	NewValue string
@@ -135,7 +133,9 @@ func (ra ReplaceAnonymizer) compareWithRequest(request generated.AnonymizerMashu
 	}
 	return false
 }
-func (ra ReplaceAnonymizer) generateReverseRequest() any { return nil }
+func (ra ReplaceAnonymizer) generateReverseRequest() generated.AnonymizerMashup {
+	return generated.AnonymizerMashup{Type_: NIL}
+}
 
 type MaskAnonymizer struct {
 	MaskingChar string
@@ -158,7 +158,9 @@ func (ma MaskAnonymizer) compareWithRequest(request generated.AnonymizerMashup) 
 	}
 	return false
 }
-func (ma MaskAnonymizer) generateReverseRequest() any { return nil }
+func (ma MaskAnonymizer) generateReverseRequest() generated.AnonymizerMashup {
+	return generated.AnonymizerMashup{Type_: NIL}
+}
 
 type HashAnonymizer struct {
 	HashType string
@@ -174,7 +176,9 @@ func (ha HashAnonymizer) compareWithRequest(request generated.AnonymizerMashup) 
 	}
 	return false
 }
-func (ha HashAnonymizer) generateReverseRequest() any { return nil }
+func (ha HashAnonymizer) generateReverseRequest() generated.AnonymizerMashup {
+	return generated.AnonymizerMashup{Type_: NIL}
+}
 
 type EncryptAnonymizer struct {
 	Key string
@@ -190,6 +194,6 @@ func (ea EncryptAnonymizer) compareWithRequest(request generated.AnonymizerMashu
 	}
 	return false
 }
-func (ea EncryptAnonymizer) generateReverseRequest() any {
-	return generated.Decrypt{Type_: DECRYPT, Key: ea.Key}
+func (ea EncryptAnonymizer) generateReverseRequest() generated.AnonymizerMashup {
+	return generated.AnonymizerMashup{Type_: DECRYPT, Key: ea.Key}
 }

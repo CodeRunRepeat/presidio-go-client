@@ -8,7 +8,6 @@ package client
 
 import (
 	"context"
-	"errors"
 
 	"github.com/CodeRunRepeat/presidio-go-client/generated"
 
@@ -160,10 +159,9 @@ func (c *Client) Anonymize(text string, anonymizers *AnonymizerSet, analyzerResu
 // Deanonymize reverses anonymization in the supplied text, using the provided anonymizers which should be reversible.
 // It can reuse an existing anonymizer result.
 func (c *Client) Deanonymize(text string, anonymizers *AnonymizerSet, results *AnonymizerResult) (string, AnonymizerResult, error) {
-	return "", AnonymizerResult{}, errors.New("Deanonymize currently not working properly due to generated client issue")
 	var request generated.DeanonymizeRequest
 	request.Text = text
-	request.Deanonymizers = anonymizers.prepareAnonymizerSetForReverseRequest()
+	request.Deanonymizers = *anonymizers.prepareAnonymizerSetForReverseRequest()
 	if results != nil {
 		request.AnonymizerResults = transformFromAnonymizerResult(*results)
 	}
