@@ -57,16 +57,6 @@ func (as *AnonymizerSet) RemoveAnonymizer(entityName string) *AnonymizerSet {
 	return as
 }
 
-func getFirstAnonymizer(as *AnonymizerSet) Anonymizer {
-	// Storing just one value from the AnonymizerSet since the auto-generated type for this field
-	// cannot accommodate multiple values.
-	firstAnonymizer := as.Get(DEFAULT)
-	if firstAnonymizer == nil {
-		firstAnonymizer = as.First()
-	}
-	return firstAnonymizer
-}
-
 func (as *AnonymizerSet) prepareAnonymizerSetForRequest() *generated.AnonymizerMap {
 	output := make(generated.AnonymizerMap, as.Count())
 
