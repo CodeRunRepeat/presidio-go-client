@@ -43,48 +43,48 @@ func TestAnonymizerSetPrepare(t *testing.T) {
 
 	var anonymizer Anonymizer = RedactAnonymizer{}
 	set.AddDefaultAnonymizer(anonymizer)
-	p := set.prepareAnonymizerSetForRequest()
-	if p.Redact.Type_ != anonymizer.getTypeName() {
+	p := (*set.prepareAnonymizerSetForRequest())[DEFAULT]
+	if p.Type_ != anonymizer.getTypeName() {
 		t.Errorf("AnonymizerSet should produce a %v request", anonymizer.getTypeName())
 	}
 
 	anonymizer = ReplaceAnonymizer{NewValue: "test"}
 	set.AddDefaultAnonymizer(anonymizer)
-	p = set.prepareAnonymizerSetForRequest()
-	if p.Replace.Type_ != anonymizer.getTypeName() {
+	p = (*set.prepareAnonymizerSetForRequest())[DEFAULT]
+	if p.Type_ != anonymizer.getTypeName() {
 		t.Errorf("AnonymizerSet should produce a %v request", anonymizer.getTypeName())
 	}
-	if res, _ := anonymizer.compareWithRequest(p.Replace); !res {
+	if !anonymizer.compareWithRequest(p) {
 		t.Errorf("AnonymizerSet produced a %v request with incorrect values", anonymizer.getTypeName())
 	}
 
 	anonymizer = MaskAnonymizer{MaskingChar: "*", CharsToMask: 4, FromEnd: false}
 	set.AddDefaultAnonymizer(anonymizer)
-	p = set.prepareAnonymizerSetForRequest()
-	if p.Mask.Type_ != anonymizer.getTypeName() {
+	p = (*set.prepareAnonymizerSetForRequest())[DEFAULT]
+	if p.Type_ != anonymizer.getTypeName() {
 		t.Errorf("AnonymizerSet should produce a %v request", anonymizer.getTypeName())
 	}
-	if res, _ := anonymizer.compareWithRequest(p.Mask); !res {
+	if !anonymizer.compareWithRequest(p) {
 		t.Errorf("AnonymizerSet produced a %v request with incorrect values", anonymizer.getTypeName())
 	}
 
 	anonymizer = HashAnonymizer{HashType: "SHA256"}
 	set.AddDefaultAnonymizer(anonymizer)
-	p = set.prepareAnonymizerSetForRequest()
-	if p.Hash.Type_ != anonymizer.getTypeName() {
+	p = (*set.prepareAnonymizerSetForRequest())[DEFAULT]
+	if p.Type_ != anonymizer.getTypeName() {
 		t.Errorf("AnonymizerSet should produce a %v request", anonymizer.getTypeName())
 	}
-	if res, _ := anonymizer.compareWithRequest(p.Hash); !res {
+	if !anonymizer.compareWithRequest(p) {
 		t.Errorf("AnonymizerSet produced a %v request with incorrect values", anonymizer.getTypeName())
 	}
 
 	anonymizer = EncryptAnonymizer{Key: "key"}
 	set.AddDefaultAnonymizer(anonymizer)
-	p = set.prepareAnonymizerSetForRequest()
-	if p.Encrypt.Type_ != anonymizer.getTypeName() {
+	p = (*set.prepareAnonymizerSetForRequest())[DEFAULT]
+	if p.Type_ != anonymizer.getTypeName() {
 		t.Errorf("AnonymizerSet should produce a %v request", anonymizer.getTypeName())
 	}
-	if res, _ := anonymizer.compareWithRequest(p.Encrypt); !res {
+	if !anonymizer.compareWithRequest(p) {
 		t.Errorf("AnonymizerSet produced a %v request with incorrect values", anonymizer.getTypeName())
 	}
 }

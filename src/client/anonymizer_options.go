@@ -1,8 +1,6 @@
 package client
 
 import (
-	"errors"
-
 	"github.com/CodeRunRepeat/presidio-go-client/generated"
 )
 
@@ -10,8 +8,8 @@ const DEFAULT string = "DEFAULT"
 
 type Anonymizer interface {
 	getTypeName() string
-	generateRequest() any
-	compareWithRequest(request any) (bool, error)
+	generateRequest() generated.AnonymizerMashup
+	compareWithRequest(request generated.AnonymizerMashup) bool
 	generateReverseRequest() any
 }
 
@@ -69,27 +67,15 @@ func getFirstAnonymizer(as *AnonymizerSet) Anonymizer {
 	return firstAnonymizer
 }
 
-func (as *AnonymizerSet) prepareAnonymizerSetForRequest() *generated.AnyOfAnonymizeRequestAnonymizers {
-	output := new(generated.AnyOfAnonymizeRequestAnonymizers)
+func (as *AnonymizerSet) prepareAnonymizerSetForRequest() *generated.AnonymizerMap {
+	output := make(generated.AnonymizerMap, as.Count())
 
-	firstAnonymizer := getFirstAnonymizer(as)
-	if firstAnonymizer == nil {
-		return nil
+	for entityType, an := range *as {
+		var mashup = an.generateRequest()
+		output[entityType] = mashup
 	}
 
-	switch firstAnonymizer.getTypeName() {
-	case REPLACE:
-		output.Replace = firstAnonymizer.generateRequest().(generated.Replace)
-	case REDACT:
-		output.Redact = firstAnonymizer.generateRequest().(generated.Redact)
-	case MASK:
-		output.Mask = firstAnonymizer.generateRequest().(generated.Mask)
-	case HASH:
-		output.Hash = firstAnonymizer.generateRequest().(generated.Hash)
-	case ENCRYPT:
-		output.Encrypt = firstAnonymizer.generateRequest().(generated.Encrypt)
-	}
-	return output
+	return &output
 }
 
 //lint:ignore U1000 Will be fixed when we resolve the anonymizer serialization issue with the Presidio team
@@ -119,31 +105,19 @@ const (
 	DECRYPT string = "decrypt"
 )
 
-type anonymizerRequestType interface {
-	generated.Replace | generated.Redact | generated.Mask | generated.Hash | generated.Encrypt
-}
-
-func checkForType[requestType anonymizerRequestType](request any) (bool, requestType, error) {
-	var value requestType
-	if request == nil {
-		return false, value, errors.New("request is nil")
-	}
-	value, test := request.(requestType)
-	if !test {
-		return false, value, errors.New("request has incorrect type")
-	}
-
-	return true, value, nil
+func checkForType(request generated.AnonymizerMashup, typeName string) bool {
+	return request.Type_ == typeName
 }
 
 type RedactAnonymizer struct {
 }
 
-func (ra RedactAnonymizer) getTypeName() string  { return REDACT }
-func (ra RedactAnonymizer) generateRequest() any { return generated.Redact{Type_: ra.getTypeName()} }
-func (ra RedactAnonymizer) compareWithRequest(request any) (bool, error) {
-	res, _, err := checkForType[generated.Redact](request)
-	return res, err
+func (ra RedactAnonymizer) getTypeName() string { return REDACT }
+func (ra RedactAnonymizer) generateRequest() generated.AnonymizerMashup {
+	return generated.AnonymizerMashup{Type_: ra.getTypeName()}
+}
+func (ra RedactAnonymizer) compareWithRequest(request generated.AnonymizerMashup) bool {
+	return checkForType(request, ra.getTypeName())
 }
 func (ra RedactAnonymizer) generateReverseRequest() any { return nil }
 
@@ -152,15 +126,14 @@ type ReplaceAnonymizer struct {
 }
 
 func (ra ReplaceAnonymizer) getTypeName() string { return REPLACE }
-func (ra ReplaceAnonymizer) generateRequest() any {
-	return generated.Replace{Type_: ra.getTypeName(), NewValue: ra.NewValue}
+func (ra ReplaceAnonymizer) generateRequest() generated.AnonymizerMashup {
+	return generated.AnonymizerMashup{Type_: ra.getTypeName(), NewValue: ra.NewValue}
 }
-func (ra ReplaceAnonymizer) compareWithRequest(request any) (bool, error) {
-	res, value, err := checkForType[generated.Replace](request)
-	if res {
-		return (value.NewValue == ra.NewValue), nil
+func (ra ReplaceAnonymizer) compareWithRequest(request generated.AnonymizerMashup) bool {
+	if checkForType(request, ra.getTypeName()) {
+		return (request.NewValue == ra.NewValue)
 	}
-	return res, err
+	return false
 }
 func (ra ReplaceAnonymizer) generateReverseRequest() any { return nil }
 
@@ -171,20 +144,19 @@ type MaskAnonymizer struct {
 }
 
 func (ma MaskAnonymizer) getTypeName() string { return MASK }
-func (ma MaskAnonymizer) generateRequest() any {
-	return generated.Mask{
+func (ma MaskAnonymizer) generateRequest() generated.AnonymizerMashup {
+	return generated.AnonymizerMashup{
 		Type_:       ma.getTypeName(),
 		MaskingChar: ma.MaskingChar,
 		CharsToMask: ma.CharsToMask,
 		FromEnd:     ma.FromEnd,
 	}
 }
-func (ma MaskAnonymizer) compareWithRequest(request any) (bool, error) {
-	res, value, err := checkForType[generated.Mask](request)
-	if res {
-		return (value.MaskingChar == ma.MaskingChar && value.CharsToMask == ma.CharsToMask && value.FromEnd == ma.FromEnd), nil
+func (ma MaskAnonymizer) compareWithRequest(request generated.AnonymizerMashup) bool {
+	if checkForType(request, ma.getTypeName()) {
+		return (request.MaskingChar == ma.MaskingChar && request.CharsToMask == ma.CharsToMask && request.FromEnd == ma.FromEnd)
 	}
-	return res, err
+	return false
 }
 func (ma MaskAnonymizer) generateReverseRequest() any { return nil }
 
@@ -193,15 +165,14 @@ type HashAnonymizer struct {
 }
 
 func (ha HashAnonymizer) getTypeName() string { return HASH }
-func (ha HashAnonymizer) generateRequest() any {
-	return generated.Hash{Type_: ha.getTypeName(), HashType: ha.HashType}
+func (ha HashAnonymizer) generateRequest() generated.AnonymizerMashup {
+	return generated.AnonymizerMashup{Type_: ha.getTypeName(), HashType: ha.HashType}
 }
-func (ha HashAnonymizer) compareWithRequest(request any) (bool, error) {
-	res, value, err := checkForType[generated.Hash](request)
-	if res {
-		return (value.HashType == ha.HashType), nil
+func (ha HashAnonymizer) compareWithRequest(request generated.AnonymizerMashup) bool {
+	if checkForType(request, ha.getTypeName()) {
+		return (request.HashType == ha.HashType)
 	}
-	return res, err
+	return false
 }
 func (ha HashAnonymizer) generateReverseRequest() any { return nil }
 
@@ -210,15 +181,14 @@ type EncryptAnonymizer struct {
 }
 
 func (ea EncryptAnonymizer) getTypeName() string { return ENCRYPT }
-func (ea EncryptAnonymizer) generateRequest() any {
-	return generated.Encrypt{Type_: ea.getTypeName(), Key: ea.Key}
+func (ea EncryptAnonymizer) generateRequest() generated.AnonymizerMashup {
+	return generated.AnonymizerMashup{Type_: ea.getTypeName(), Key: ea.Key}
 }
-func (ea EncryptAnonymizer) compareWithRequest(request any) (bool, error) {
-	res, value, err := checkForType[generated.Encrypt](request)
-	if res {
-		return (value.Key == ea.Key), nil
+func (ea EncryptAnonymizer) compareWithRequest(request generated.AnonymizerMashup) bool {
+	if checkForType(request, ea.getTypeName()) {
+		return (request.Key == ea.Key)
 	}
-	return res, err
+	return false
 }
 func (ea EncryptAnonymizer) generateReverseRequest() any {
 	return generated.Decrypt{Type_: DECRYPT, Key: ea.Key}

@@ -149,7 +149,7 @@ func (c *Client) Anonymize(text string, anonymizers *AnonymizerSet, analyzerResu
 	return "", AnonymizerResult{}, errors.New("Anonymize currently not working properly due to generated client issue")
 	var request generated.AnonymizeRequest
 	request.Text = text
-	request.Anonymizers = anonymizers.prepareAnonymizerSetForRequest()
+	request.Anonymizers = *anonymizers.prepareAnonymizerSetForRequest()
 	request.AnalyzerResults = transformFromAnalyzerResult(analyzerResult)
 	response, _, err := c.apiClient.AnonymizerApi.AnonymizePost(c.createContext(), request)
 
