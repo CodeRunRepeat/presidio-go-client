@@ -13,7 +13,6 @@ type AnonymizeRequest struct {
 	// The text to anonymize
 	Text string `json:"text"`
 	// Object where the key is DEFAULT or the ENTITY_TYPE and the value is the anonymizer definition
-	// Anonymizers *AnyOfAnonymizeRequestAnonymizers `json:"anonymizers,omitempty"` // Commented out to replace with handcrafted type
 	Anonymizers AnonymizerMap `json:"anonymizers,omitempty"`
 	// Array of analyzer detections
 	AnalyzerResults []RecognizerResult `json:"analyzer_results"`
