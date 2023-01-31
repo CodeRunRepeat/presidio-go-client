@@ -18,5 +18,5 @@ type Mask struct {
 	// The amount of characters that should be replaced
 	CharsToMask int32 `json:"chars_to_mask"`
 	// Whether to mask the PII from it's end
-	FromEnd bool `json:"from_end,omitempty"`
+	FromEnd bool `json:"from_end"`
 }
