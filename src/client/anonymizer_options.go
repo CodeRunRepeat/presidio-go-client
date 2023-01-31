@@ -81,16 +81,6 @@ func (as *AnonymizerSet) prepareAnonymizerSetForReverseRequest() *generated.Anon
 }
 
 /*------------------------------ Anonymizer types ------------------------------*/
-const (
-	REDACT  string = "redact"
-	REPLACE string = "replace"
-	MASK    string = "mask"
-	HASH    string = "hash"
-	ENCRYPT string = "encrypt"
-	DECRYPT string = "decrypt"
-	NIL     string = ""
-)
-
 func checkForType(request generated.AnonymizerMashup, typeName string) bool {
 	return request.Type_ == typeName
 }
@@ -98,7 +88,7 @@ func checkForType(request generated.AnonymizerMashup, typeName string) bool {
 type RedactAnonymizer struct {
 }
 
-func (ra RedactAnonymizer) getTypeName() string { return REDACT }
+func (ra RedactAnonymizer) getTypeName() string { return generated.REDACT }
 func (ra RedactAnonymizer) generateRequest() generated.AnonymizerMashup {
 	return generated.AnonymizerMashup{Type_: ra.getTypeName()}
 }
@@ -106,14 +96,14 @@ func (ra RedactAnonymizer) compareWithRequest(request generated.AnonymizerMashup
 	return checkForType(request, ra.getTypeName())
 }
 func (ra RedactAnonymizer) generateReverseRequest() generated.AnonymizerMashup {
-	return generated.AnonymizerMashup{Type_: NIL}
+	return generated.AnonymizerMashup{Type_: generated.NIL}
 }
 
 type ReplaceAnonymizer struct {
 	NewValue string
 }
 
-func (ra ReplaceAnonymizer) getTypeName() string { return REPLACE }
+func (ra ReplaceAnonymizer) getTypeName() string { return generated.REPLACE }
 func (ra ReplaceAnonymizer) generateRequest() generated.AnonymizerMashup {
 	return generated.AnonymizerMashup{Type_: ra.getTypeName(), NewValue: ra.NewValue}
 }
@@ -124,7 +114,7 @@ func (ra ReplaceAnonymizer) compareWithRequest(request generated.AnonymizerMashu
 	return false
 }
 func (ra ReplaceAnonymizer) generateReverseRequest() generated.AnonymizerMashup {
-	return generated.AnonymizerMashup{Type_: NIL}
+	return generated.AnonymizerMashup{Type_: generated.NIL}
 }
 
 type MaskAnonymizer struct {
@@ -133,7 +123,7 @@ type MaskAnonymizer struct {
 	FromEnd     bool
 }
 
-func (ma MaskAnonymizer) getTypeName() string { return MASK }
+func (ma MaskAnonymizer) getTypeName() string { return generated.MASK }
 func (ma MaskAnonymizer) generateRequest() generated.AnonymizerMashup {
 	return generated.AnonymizerMashup{
 		Type_:       ma.getTypeName(),
@@ -149,14 +139,14 @@ func (ma MaskAnonymizer) compareWithRequest(request generated.AnonymizerMashup) 
 	return false
 }
 func (ma MaskAnonymizer) generateReverseRequest() generated.AnonymizerMashup {
-	return generated.AnonymizerMashup{Type_: NIL}
+	return generated.AnonymizerMashup{Type_: generated.NIL}
 }
 
 type HashAnonymizer struct {
 	HashType string
 }
 
-func (ha HashAnonymizer) getTypeName() string { return HASH }
+func (ha HashAnonymizer) getTypeName() string { return generated.HASH }
 func (ha HashAnonymizer) generateRequest() generated.AnonymizerMashup {
 	return generated.AnonymizerMashup{Type_: ha.getTypeName(), HashType: ha.HashType}
 }
@@ -167,14 +157,14 @@ func (ha HashAnonymizer) compareWithRequest(request generated.AnonymizerMashup) 
 	return false
 }
 func (ha HashAnonymizer) generateReverseRequest() generated.AnonymizerMashup {
-	return generated.AnonymizerMashup{Type_: NIL}
+	return generated.AnonymizerMashup{Type_: generated.NIL}
 }
 
 type EncryptAnonymizer struct {
 	Key string
 }
 
-func (ea EncryptAnonymizer) getTypeName() string { return ENCRYPT }
+func (ea EncryptAnonymizer) getTypeName() string { return generated.ENCRYPT }
 func (ea EncryptAnonymizer) generateRequest() generated.AnonymizerMashup {
 	return generated.AnonymizerMashup{Type_: ea.getTypeName(), Key: ea.Key}
 }
@@ -185,5 +175,5 @@ func (ea EncryptAnonymizer) compareWithRequest(request generated.AnonymizerMashu
 	return false
 }
 func (ea EncryptAnonymizer) generateReverseRequest() generated.AnonymizerMashup {
-	return generated.AnonymizerMashup{Type_: DECRYPT, Key: ea.Key}
+	return generated.AnonymizerMashup{Type_: generated.DECRYPT, Key: ea.Key}
 }
