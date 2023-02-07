@@ -27,7 +27,7 @@ func printResults(result client.AnalyzerResult, err error, funcName string) {
 }
 
 func detectCustomPattern(baseUrl string) {
-	var c = client.NewClient(baseUrl, nil)
+	var c = client.NewClient(client.ClientConfig{BaseUrl: baseUrl})
 	const PATTERN string = "[A-Z]{2}\\d{12,16}"
 	const SENTENCE string = "My bank account is HG1234123412341235123451234"
 	result, err := c.AnalyzeWithPattern(SENTENCE, "en", PATTERN, 0.8, "TEST_IBAN")
@@ -37,7 +37,7 @@ func detectCustomPattern(baseUrl string) {
 }
 
 func detectSpecificEntities(baseUrl string) {
-	var c = client.NewClient(baseUrl, nil)
+	var c = client.NewClient(client.ClientConfig{BaseUrl: baseUrl})
 
 	const SENTENCE string = "My name is Joe Smith and my phone is (555)4168123"
 	var options client.AnalyzerOptions
@@ -54,7 +54,7 @@ func detectSpecificEntities(baseUrl string) {
 }
 
 func changeScoreThreshold(baseUrl string) {
-	var c = client.NewClient(baseUrl, nil)
+	var c = client.NewClient(client.ClientConfig{BaseUrl: baseUrl})
 	const SENTENCE string = "My name is Joe Smith and my phone is (555)4168123"
 
 	fmt.Printf("Analyzing '%v' with defaults\n", SENTENCE)

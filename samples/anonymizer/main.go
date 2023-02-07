@@ -45,7 +45,7 @@ func replaceSample(analyzerBaseUrl string, anonymizerBaseUrl string) {
 }
 
 func anonymizeSample(analyzerBaseUrl string, anonymizerBaseUrl string, anonymizer client.Anonymizer) {
-	var analyzerClient = client.NewClient(analyzerBaseUrl, nil)
+	var analyzerClient = client.NewClient(client.ClientConfig{BaseUrl: analyzerBaseUrl})
 	const SENTENCE string = "On September 18 I visited microsoft.com and sent an email to test@presidio.site, from the IP 192.168.0.1"
 	analyzerResult, err := analyzerClient.AnalyzeWithDefaults(SENTENCE, "en")
 
@@ -53,7 +53,7 @@ func anonymizeSample(analyzerBaseUrl string, anonymizerBaseUrl string, anonymize
 		return
 	}
 
-	var anonymizerClient = client.NewClient(anonymizerBaseUrl, nil)
+	var anonymizerClient = client.NewClient(client.ClientConfig{BaseUrl: anonymizerBaseUrl})
 	anonymizers := make(client.AnonymizerSet)
 	anonymizers.AddDefaultAnonymizer(anonymizer)
 	anonymizedText, _, err := anonymizerClient.Anonymize(SENTENCE, &anonymizers, &analyzerResult)
@@ -64,7 +64,7 @@ func anonymizeSample(analyzerBaseUrl string, anonymizerBaseUrl string, anonymize
 }
 
 func presidioAsSomethingElse(anonymizerBaseUrl string, anonymizer client.Anonymizer, description string) {
-	var c = client.NewClient(anonymizerBaseUrl, nil)
+	var c = client.NewClient(client.ClientConfig{BaseUrl: anonymizerBaseUrl})
 
 	const SENTENCE string = "This is a test"
 	anonymizers := make(client.AnonymizerSet)

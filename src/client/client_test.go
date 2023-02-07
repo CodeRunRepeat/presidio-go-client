@@ -15,9 +15,9 @@ func setupTest(auth AuthenticationMethod, clientType int) *Client {
 	anonymizerBaseUrl = getBaseUrl(anonymizerBaseUrl, ENVIROMENT_ANONYMIZER_URL, DEFAULT_ANONYMIZER_URL)
 
 	if clientType == ANONYMIZER_CLIENT {
-		return NewClient(anonymizerBaseUrl, auth)
+		return NewClient(ClientConfig{BaseUrl: anonymizerBaseUrl, AuthenticationMethod: auth})
 	}
-	return NewClient(analyzerBaseUrl, auth)
+	return NewClient(ClientConfig{BaseUrl: analyzerBaseUrl, AuthenticationMethod: auth})
 }
 
 func getBaseUrl(currentValue string, envName string, defaultValue string) string {
