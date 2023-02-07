@@ -19,19 +19,38 @@ type Client struct {
 	apiClient            *generated.APIClient
 	authenticationMethod AuthenticationMethod
 	context              context.Context
+	contextCreator       ContextCreator
+}
+
+type ClientConfig struct {
+	BaseUrl              string
+	AuthenticationMethod AuthenticationMethod
+	ContextCreator       ContextCreator
+}
+
+type ContextCreator func() context.Context
+
+func defaultContextCreator() context.Context {
+	return context.TODO()
 }
 
 /* -------------------- Creation -------------------- */
 
 // NewClient creates a new client to a service located at baseUrl using an optional authenticationMethod
-func NewClient(baseUrl string, authenticationMethod AuthenticationMethod) *Client {
+func NewClient(config ClientConfig) *Client {
 	conf := generated.NewConfiguration()
-	conf.BasePath = baseUrl
+	conf.BasePath = config.BaseUrl
 	conf.AddDefaultHeader("Accept", "application/json")
 
 	c := new(Client)
+
 	c.apiClient = generated.NewAPIClient(conf)
-	c.authenticationMethod = authenticationMethod
+	c.authenticationMethod = config.AuthenticationMethod
+	c.contextCreator = defaultContextCreator
+	if config.ContextCreator != nil {
+		c.contextCreator = config.ContextCreator
+	}
+
 	return c
 }
 
@@ -186,7 +205,7 @@ func (c *Client) GetDeanonymizers() ([]string, error) {
 
 func (client *Client) createContext() context.Context {
 	if client.context == nil {
-		client.context = context.TODO()
+		client.context = client.contextCreator()
 
 		switch client.authenticationMethod.(type) {
 		case AccessToken:

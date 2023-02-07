@@ -15,7 +15,7 @@ func main() {
 }
 
 func basicSample(baseUrl string) {
-	var client = client.NewClient(baseUrl, nil)
+	var client = client.NewClient(client.ClientConfig{BaseUrl: baseUrl})
 	{
 		var result, err = client.AnalyzerHealth()
 		fmt.Printf("Health() returned: %v, %v\n", result, err)
@@ -27,7 +27,10 @@ func basicSample(baseUrl string) {
 }
 
 func basicAuthSample(baseUrl string) {
-	var client = client.NewClient(baseUrl, client.BasicAuth{UserName: "test", Password: "pass@word1"}) /* imaginary credentials*/
+	var client = client.NewClient(client.ClientConfig{
+		BaseUrl:              baseUrl,
+		AuthenticationMethod: client.BasicAuth{UserName: "test", Password: "pass@word1"},
+	}) /* imaginary credentials*/
 
 	{
 		var result, err = client.AnalyzerHealth()
