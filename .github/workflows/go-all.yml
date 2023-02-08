@@ -1,13 +1,13 @@
 # This workflow will build a golang project
 # For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-go
 
-name: Go
+name: Go-all
 
 on:
   push:
-    branches: [ ]
+    branches: [ "main" ]
   pull_request:
-    branches: [ ]
+    branches: [ "main" ]
 
 jobs:
 
@@ -22,15 +22,21 @@ jobs:
         go-version: 1.19
 
     - name: Build
-      run: cd src && make build # go build -v ./...
+      run: cd src && make build
 
     - name: Staticcheck
       uses: dominikh/staticcheck-action@v1.2.0
       with:
-        version: v0.3.3
+        version: "2023.1"
         min-go-version: 1.19
-        install-go: true # default is true
+        install-go: false
         working-directory: ./src/client
 
     - name: Test
-      run: cd src && make test # go test -v ./...
+      run: cd src && make test
+    
+    - name: Build samples
+      run: cd samples && make build
+
+    - name: Staticcheck samples
+      run: cd samples && make check
