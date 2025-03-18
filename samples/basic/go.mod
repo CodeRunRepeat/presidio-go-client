@@ -1,6 +1,7 @@
 module example.com/samples/basic
 
 go 1.19
+toolchain go1.24.1
 
 require github.com/CodeRunRepeat/presidio-go-client v0.0.1
 
@@ -11,7 +12,7 @@ require (
 	golang.org/x/net v0.36.0 // indirect
 	golang.org/x/oauth2 v0.4.0 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
-	google.golang.org/protobuf v1.28.1 // indirect
+	google.golang.org/protobuf v1.33.0 // indirect
 )
 
 replace github.com/CodeRunRepeat/presidio-go-client => ../../src
