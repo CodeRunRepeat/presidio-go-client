@@ -1,6 +1,6 @@
 module example.com/samples/anonymizer
 
-go 1.19
+go 1.25.0
 
 require github.com/CodeRunRepeat/presidio-go-client v0.0.1
 
@@ -8,10 +8,10 @@ require (
 	github.com/antihax/optional v1.0.0 // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/google/uuid v1.3.0 // indirect
-	golang.org/x/net v0.7.0 // indirect
+	golang.org/x/net v0.55.0 // indirect
 	golang.org/x/oauth2 v0.4.0 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
-	google.golang.org/protobuf v1.28.1 // indirect
+	google.golang.org/protobuf v1.33.0 // indirect
 )
 
 replace github.com/CodeRunRepeat/presidio-go-client => ../../src
